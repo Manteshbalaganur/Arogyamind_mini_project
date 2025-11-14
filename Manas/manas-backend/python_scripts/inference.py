@@ -3,7 +3,7 @@ from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 import sys
 import json
-
+import os 
 class Chatbot:
     def __init__(self):
         self.llm = self.initialize_llm()
@@ -12,7 +12,9 @@ class Chatbot:
     def initialize_llm(self):
         return ChatGroq(
             temperature=0,
-            groq_api_key="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",
+            # groq_api_key="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",
+            # import os
+            api_key = os.getenv('GROQ_API_KEY'),  # Get from environment variable
             model_name="llama-3.3-70b-versatile"
         )
 
