@@ -1,0 +1,119 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 258 75% 69%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 251 41% 46%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 174 100% 69%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 258 75% 69%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 226 33% 17%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 226 33% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 258 75% 69%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 251 41% 46%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 174 100% 69%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 258 75% 69%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  .typewriter {
+    @apply overflow-hidden whitespace-nowrap border-r-4 border-arogya-primary pr-1 animate-typewriter;
+  }
+  
+  .typewriter-cursor {
+    @apply animate-blink-cursor;
+  }
+  
+  .voice-assistant {
+    @apply relative w-12 h-12 rounded-full flex items-center justify-center bg-arogya-primary animate-pulse-glow;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-br from-arogya-tertiary to-arogya-secondary;
+  }
+  
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-arogya-primary to-arogya-accent;
+  }
+  
+  .card-effect {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+}
+
+/* Font import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
