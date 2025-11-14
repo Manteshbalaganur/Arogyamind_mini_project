@@ -365,16 +365,96 @@
 
 // module.exports = { chatHandler };
 
+// const { spawn } = require('child_process');
+// const { logger } = require('../utils/logger');
+
+// const chatHandler = async (req, res) => {
+//   try {
+//     const { message, timestamp } = req.body;
+//     logger.debug(`Received request: ${JSON.stringify(req.body)}`);
+
+//     if (!message) {
+//       logger.warning("No message provided in request");
+//       return res.status(400).json({ error: "No message provided" });
+//     }
+
+//     // Call Python AI model
+//     const pythonProcess = spawn('python', [
+//       './python_scripts/inference.py',
+//       JSON.stringify({ message, timestamp })
+//     ]);
+
+//     let result = '';
+//     let error = '';
+
+//     pythonProcess.stdout.on('data', (data) => {
+//       result += data.toString();
+//     });
+
+//     pythonProcess.stderr.on('data', (data) => {
+//       error += data.toString();
+//     });
+
+//     pythonProcess.on('close', (code) => {
+//       if (code !== 0) {
+//         logger.error(`Python process error: ${error}`);
+        
+//         // 🎯 SIMPLE FALLBACK: If Python fails, return basic response
+//         const fallbackResponse = `I understand you're saying: "${message}". I'm here to help and support you through whatever you're going through. Could you tell me a bit more about how you're feeling?`;
+        
+//         res.json({
+//           response: fallbackResponse,
+//           alert: null,
+//           timestamp: timestamp
+//         });
+//         return;
+//       }
+
+//       try {
+//         const parsedResult = JSON.parse(result);
+//         logger.debug(`Response: ${JSON.stringify(parsedResult)}`);
+        
+//         res.json({
+//           response: parsedResult.response,
+//           alert: parsedResult.alert,
+//           timestamp: timestamp
+//         });
+//       } catch (parseError) {
+//         logger.error(`Parse error: ${parseError}`);
+        
+//         // 🎯 FALLBACK: If parsing fails, return basic response
+//         const fallbackResponse = `Thanks for sharing: "${message}". I'm listening and here to support you. How can I help you feel better?`;
+        
+//         res.json({
+//           response: fallbackResponse,
+//           alert: null,
+//           timestamp: timestamp
+//         });
+//       }
+//     });
+
+//   } catch (error) {
+//     logger.error(`Error processing request: ${error.message}`);
+    
+//     // 🎯 FALLBACK: If everything fails
+//     res.json({
+//       response: "I'm here to help and support you. Please tell me what's on your mind.",
+//       alert: null,
+//       timestamp: new Date().toISOString()
+//     });
+//   }
+// };
+
+// module.exports = { chatHandler };
+
 const { spawn } = require('child_process');
 const { logger } = require('../utils/logger');
 
 const chatHandler = async (req, res) => {
   try {
     const { message, timestamp } = req.body;
-    logger.debug(`Received request: ${JSON.stringify(req.body)}`);
 
     if (!message) {
-      logger.warning("No message provided in request");
       return res.status(400).json({ error: "No message provided" });
     }
 
@@ -397,51 +477,27 @@ const chatHandler = async (req, res) => {
 
     pythonProcess.on('close', (code) => {
       if (code !== 0) {
-        logger.error(`Python process error: ${error}`);
-        
-        // 🎯 SIMPLE FALLBACK: If Python fails, return basic response
-        const fallbackResponse = `I understand you're saying: "${message}". I'm here to help and support you through whatever you're going through. Could you tell me a bit more about how you're feeling?`;
-        
-        res.json({
-          response: fallbackResponse,
-          alert: null,
-          timestamp: timestamp
+        // If Python fails, return error but don't use fallback
+        return res.status(500).json({ 
+          error: "AI model not available",
+          details: "Python dependencies missing on server"
         });
-        return;
       }
 
       try {
         const parsedResult = JSON.parse(result);
-        logger.debug(`Response: ${JSON.stringify(parsedResult)}`);
-        
         res.json({
           response: parsedResult.response,
           alert: parsedResult.alert,
           timestamp: timestamp
         });
       } catch (parseError) {
-        logger.error(`Parse error: ${parseError}`);
-        
-        // 🎯 FALLBACK: If parsing fails, return basic response
-        const fallbackResponse = `Thanks for sharing: "${message}". I'm listening and here to support you. How can I help you feel better?`;
-        
-        res.json({
-          response: fallbackResponse,
-          alert: null,
-          timestamp: timestamp
-        });
+        res.status(500).json({ error: "Failed to parse AI response" });
       }
     });
 
   } catch (error) {
-    logger.error(`Error processing request: ${error.message}`);
-    
-    // 🎯 FALLBACK: If everything fails
-    res.json({
-      response: "I'm here to help and support you. Please tell me what's on your mind.",
-      alert: null,
-      timestamp: new Date().toISOString()
-    });
+    res.status(500).json({ error: error.message });
   }
 };
 
