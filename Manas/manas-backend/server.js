@@ -5,12 +5,14 @@ const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 🎯 WORKING CORS CONFIGURATION
+// 🎯 FIXED CORS - Allow all Vercel domains
 app.use(cors({
   origin: [
     'https://arogyamind-mini-project-3laq.vercel.app',
+    'https://arogyamind-mini-project-3-git-.*-manteshbalaganurs-projects.vercel.app', // Preview URLs
+    'https://arogyamind-mini-project-.*.vercel.app', // All Vercel subdomains
     'http://localhost:8080',
-    'http://localhost:3000',
+    'http://localhost:3000', 
     'http://localhost:5173'
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
