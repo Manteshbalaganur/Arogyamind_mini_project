@@ -12,9 +12,9 @@ class Chatbot:
     def initialize_llm(self):
         return ChatGroq(
             temperature=0,
-            # groq_api_key="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",
+            groq_api_key="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",
             # import os
-            api_key = os.getenv('GROQ_API_KEY'),  # Get from environment variable
+            # api_key = os.getenv('GROQ_API_KEY'),  # Get from environment variable
             model_name="llama-3.3-70b-versatile"
         )
 
