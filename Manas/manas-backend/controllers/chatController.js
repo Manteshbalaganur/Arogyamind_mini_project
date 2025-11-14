@@ -364,118 +364,62 @@
 // };
 
 // module.exports = { chatHandler };
-const { logger } = require('../utils/logger');
 
-// Simple response templates (no Python integration)
-const responseTemplates = {
-  stressed: {
-    type: 'formatted',
-    content: {
-      greeting: "Hey! 👋 I see you're in the grind 😮‍💨",
-      mainMessage: "Too much work + tight deadlines = major overwhelm vibes 😅 Let's tackle this together!",
-      sections: [
-        {
-          title: "🚀 Quick Fix",
-          points: [
-            "Take 3 deep breaths 🌬️",
-            "Break tasks into small chunks 🎯", 
-            "You've got this! 💪"
-          ]
-        }
-      ],
-      prompt: "Which tip do you want to try first? 🌟"
-    }
-  }
-};
+const { spawn } = require('child_process');
+const { logger } = require('../utils/logger');
 
 const chatHandler = async (req, res) => {
   try {
     const { message, timestamp } = req.body;
-    
-    console.log('Received message:', message);
+    logger.debug(`Received request: ${JSON.stringify(req.body)}`);
 
     if (!message) {
+      logger.warning("No message provided in request");
       return res.status(400).json({ error: "No message provided" });
     }
 
-    // 🎯 SIMPLE FIX: Return formatted response without Python
-    const formattedResponse = responseTemplates.stressed;
-    
-    console.log('Sending formatted response');
-    
-    res.json({
-      response: formattedResponse,
-      reply: formattedResponse,
-      alert: null,
-      timestamp: timestamp || new Date().toISOString()
+    // Call Python AI model
+    const pythonProcess = spawn('python', [
+      './python_scripts/inference.py',
+      JSON.stringify({ message, timestamp })
+    ]);
+
+    let result = '';
+    let error = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      result += data.toString();
     });
-    
+
+    pythonProcess.stderr.on('data', (data) => {
+      error += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        logger.error(`Python process error: ${error}`);
+        return res.status(500).json({ error: "AI model processing failed" });
+      }
+
+      try {
+        const parsedResult = JSON.parse(result);
+        logger.debug(`Response: ${JSON.stringify(parsedResult)}`);
+        
+        res.json({
+          response: parsedResult.response,
+          alert: parsedResult.alert,
+          timestamp: timestamp
+        });
+      } catch (parseError) {
+        logger.error(`Parse error: ${parseError}`);
+        res.status(500).json({ error: "Failed to parse AI response" });
+      }
+    });
+
   } catch (error) {
-    console.error('Chat handler error:', error);
-    res.status(500).json({ 
-      error: "Internal server error",
-      details: error.message 
-    });
+    logger.error(`Error processing request: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
 module.exports = { chatHandler };
-
-// const { spawn } = require('child_process');
-// const { logger } = require('../utils/logger');
-
-// const chatHandler = async (req, res) => {
-//   try {
-//     const { message, timestamp } = req.body;
-//     logger.debug(`Received request: ${JSON.stringify(req.body)}`);
-
-//     if (!message) {
-//       logger.warning("No message provided in request");
-//       return res.status(400).json({ error: "No message provided" });
-//     }
-
-//     // Call Python AI model
-//     const pythonProcess = spawn('python', [
-//       './python_scripts/inference.py',
-//       JSON.stringify({ message, timestamp })
-//     ]);
-
-//     let result = '';
-//     let error = '';
-
-//     pythonProcess.stdout.on('data', (data) => {
-//       result += data.toString();
-//     });
-
-//     pythonProcess.stderr.on('data', (data) => {
-//       error += data.toString();
-//     });
-
-//     pythonProcess.on('close', (code) => {
-//       if (code !== 0) {
-//         logger.error(`Python process error: ${error}`);
-//         return res.status(500).json({ error: "AI model processing failed" });
-//       }
-
-//       try {
-//         const parsedResult = JSON.parse(result);
-//         logger.debug(`Response: ${JSON.stringify(parsedResult)}`);
-        
-//         res.json({
-//           response: parsedResult.response,
-//           alert: parsedResult.alert,
-//           timestamp: timestamp
-//         });
-//       } catch (parseError) {
-//         logger.error(`Parse error: ${parseError}`);
-//         res.status(500).json({ error: "Failed to parse AI response" });
-//       }
-//     });
-
-//   } catch (error) {
-//     logger.error(`Error processing request: ${error.message}`);
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
-// module.exports = { chatHandler };
