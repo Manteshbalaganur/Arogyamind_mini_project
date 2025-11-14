@@ -12,11 +12,14 @@ const PORT = process.env.PORT || 5000;
 // CORS configuration for production
 app.use(cors({
   origin: [
-    'https://your-frontend-app.vercel.app', // Your Vercel URL
+    'https://arogyamind-mini-project-3laq.vercel.app', // Your Vercel frontend
     'http://localhost:3000',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'https://arogyamind-mini-project-3laq.vercel.app' // Add this specifically
   ],
-  credentials: true
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json());
