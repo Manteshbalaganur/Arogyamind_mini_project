@@ -506,35 +506,110 @@
 // module.exports = { chatHandler };
 
 // controllers/chatController.js - TEMPORARY TEST VERSION
+// controllers/chatController.js
+const { spawn } = require('child_process');
+const path = require('path');
+
 const chatHandler = async (req, res) => {
   try {
-    console.log('📨 Received chat request:', req.body);
-    
-    const { message } = req.body;
+    const { message, timestamp } = req.body;
 
-    if (!message) {
+    console.log('📨 Received chat request:', { message, timestamp });
+
+    if (!message || message.trim() === '') {
       return res.status(400).json({ 
         success: false,
         error: "No message provided" 
       });
     }
 
-    // Simple test response - no Python dependency
-    const testResponse = {
-      success: true,
-      response: `I received your message: "${message}". This is a test response from the server.`,
-      alert: false,
-      timestamp: new Date().toISOString()
-    };
+    // Call Python AI model
+    const pythonProcess = spawn('python', [
+      path.join(__dirname, '../python_scripts/inference.py'),
+      JSON.stringify({ 
+        message: message.trim(),
+        timestamp: timestamp || new Date().toISOString()
+      })
+    ]);
 
-    console.log('✅ Sending test response');
-    res.json(testResponse);
-    
+    let result = '';
+    let errorOutput = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      result += data.toString();
+      console.log('🐍 Python stdout:', data.toString());
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+      console.error('❌ Python stderr:', data.toString());
+    });
+
+    pythonProcess.on('close', (code) => {
+      console.log(`🐍 Python process exited with code: ${code}`);
+      
+      if (code !== 0) {
+        console.error('❌ Python process failed');
+        console.error('Error details:', errorOutput);
+        
+        // Fallback response when Python fails
+        return res.json({
+          success: true,
+          response: "I'm here to listen and support you. Please tell me how you're feeling today. If you're going through a difficult time, remember that professional help is available.",
+          alert: false,
+          timestamp: timestamp || new Date().toISOString()
+        });
+      }
+
+      try {
+        // Parse the Python response
+        const parsedResult = JSON.parse(result);
+        console.log('✅ AI Response received:', parsedResult);
+        
+        res.json({
+          success: true,
+          response: parsedResult.response,
+          alert: parsedResult.alert || false,
+          timestamp: timestamp || new Date().toISOString()
+        });
+        
+      } catch (parseError) {
+        console.error('❌ JSON parse error:', parseError);
+        console.log('Raw Python output that failed to parse:', result);
+        
+        // Fallback if JSON parsing fails
+        res.json({
+          success: true,
+          response: "Thank you for sharing your thoughts with me. I'm here to provide support and listen without judgment. How can I help you today?",
+          alert: false,
+          timestamp: timestamp || new Date().toISOString()
+        });
+      }
+    });
+
+    // Handle timeout (15 seconds for AI processing)
+    const timeout = setTimeout(() => {
+      pythonProcess.kill();
+      console.log('⏰ Python process timeout after 15 seconds');
+      
+      res.json({
+        success: true,
+        response: "I'm taking longer than usual to process your message. Please try again in a moment, or feel free to rephrase your question.",
+        alert: false,
+        timestamp: timestamp || new Date().toISOString()
+      });
+    }, 15000);
+
+    pythonProcess.on('close', () => {
+      clearTimeout(timeout);
+    });
+
   } catch (error) {
     console.error('❌ Chat handler error:', error);
     res.status(500).json({ 
       success: false,
-      error: error.message 
+      error: "I'm experiencing some technical difficulties right now. Please try again in a few moments.",
+      timestamp: new Date().toISOString()
     });
   }
 };
