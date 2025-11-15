@@ -507,6 +507,7 @@
 
 // controllers/chatController.js - TEMPORARY TEST VERSION
 // controllers/chatController.js
+// controllers/chatController.js - PROPER AI VERSION
 const { spawn } = require('child_process');
 const path = require('path');
 
@@ -514,7 +515,7 @@ const chatHandler = async (req, res) => {
   try {
     const { message, timestamp } = req.body;
 
-    console.log('📨 Received chat request:', { message, timestamp });
+    console.log('📨 Received chat request:', { message });
 
     if (!message || message.trim() === '') {
       return res.status(400).json({ 
@@ -537,79 +538,48 @@ const chatHandler = async (req, res) => {
 
     pythonProcess.stdout.on('data', (data) => {
       result += data.toString();
-      console.log('🐍 Python stdout:', data.toString());
     });
 
     pythonProcess.stderr.on('data', (data) => {
       errorOutput += data.toString();
-      console.error('❌ Python stderr:', data.toString());
+      console.error('Python Error:', data.toString());
     });
 
     pythonProcess.on('close', (code) => {
-      console.log(`🐍 Python process exited with code: ${code}`);
+      console.log(`Python exit code: ${code}`);
+      console.log(`Python output: ${result}`);
       
-      if (code !== 0) {
-        console.error('❌ Python process failed');
-        console.error('Error details:', errorOutput);
-        
-        // Fallback response when Python fails
-        return res.json({
-          success: true,
-          response: "I'm here to listen and support you. Please tell me how you're feeling today. If you're going through a difficult time, remember that professional help is available.",
-          alert: false,
-          timestamp: timestamp || new Date().toISOString()
+      if (code !== 0 || errorOutput) {
+        console.error('Python process failed:', errorOutput);
+        return res.status(500).json({
+          success: false,
+          error: "AI service temporarily unavailable",
+          details: errorOutput
         });
       }
 
       try {
-        // Parse the Python response
         const parsedResult = JSON.parse(result);
-        console.log('✅ AI Response received:', parsedResult);
-        
         res.json({
           success: true,
           response: parsedResult.response,
           alert: parsedResult.alert || false,
           timestamp: timestamp || new Date().toISOString()
         });
-        
       } catch (parseError) {
-        console.error('❌ JSON parse error:', parseError);
-        console.log('Raw Python output that failed to parse:', result);
-        
-        // Fallback if JSON parsing fails
-        res.json({
-          success: true,
-          response: "Thank you for sharing your thoughts with me. I'm here to provide support and listen without judgment. How can I help you today?",
-          alert: false,
-          timestamp: timestamp || new Date().toISOString()
+        console.error('JSON parse error:', parseError);
+        res.status(500).json({
+          success: false,
+          error: "Failed to process AI response"
         });
       }
     });
 
-    // Handle timeout (15 seconds for AI processing)
-    const timeout = setTimeout(() => {
-      pythonProcess.kill();
-      console.log('⏰ Python process timeout after 15 seconds');
-      
-      res.json({
-        success: true,
-        response: "I'm taking longer than usual to process your message. Please try again in a moment, or feel free to rephrase your question.",
-        alert: false,
-        timestamp: timestamp || new Date().toISOString()
-      });
-    }, 15000);
-
-    pythonProcess.on('close', () => {
-      clearTimeout(timeout);
-    });
-
   } catch (error) {
-    console.error('❌ Chat handler error:', error);
+    console.error('Chat handler error:', error);
     res.status(500).json({ 
       success: false,
-      error: "I'm experiencing some technical difficulties right now. Please try again in a few moments.",
-      timestamp: new Date().toISOString()
+      error: error.message
     });
   }
 };

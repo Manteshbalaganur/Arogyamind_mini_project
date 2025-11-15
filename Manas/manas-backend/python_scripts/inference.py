@@ -1,4 +1,4 @@
-# inference.py - Updated to use environment variable
+# inference.py - SECURE VERSION
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 import sys
@@ -11,14 +11,14 @@ class Chatbot:
         self.keywords = ["death", "murder", "suicide", "harm", "kill", "hurt myself", "end my life"]
 
     def initialize_llm(self):
-        # Get API key from environment variable (more secure)
+        # Get API key from environment variable - SECURE
         groq_api_key = os.getenv('GROQ_API_KEY')
         
         if not groq_api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
             
         return ChatGroq(
-            temperature=0.7,  # Slightly higher for more natural responses
+            temperature=0.7,
             groq_api_key=groq_api_key,
             model_name="llama-3.3-70b-versatile"
         )
@@ -30,21 +30,14 @@ class Chatbot:
         
         urgent_keywords = ["suicide", "kill myself", "end my life", "want to die", "harm myself"]
         if any(keyword in query_lower for keyword in urgent_keywords):
-            alert_message = "I'm really concerned about what you're sharing. Please reach out to a mental health professional immediately. You can contact a crisis helpline - they're available 24/7. In India: Vandrevala Foundation at 1860-2662-345 or 1-800-2333-330."
+            alert_message = "I'm really concerned about what you're sharing. Please reach out to a mental health professional immediately."
 
-        # Enhanced prompt for mental health support
-        prompt_template = """You are a compassionate, empathetic mental health support assistant called Manas. Your role is to provide emotional support, active listening, and gentle guidance.
+        # Mental health focused prompt
+        prompt_template = """You are Manas, a compassionate mental health support assistant. Provide warm, empathetic responses that validate feelings and encourage sharing.
 
-User message: {question}
+User: {question}
 
-Please respond with:
-- Warm, empathetic tone
-- Validation of their feelings
-- Open-ended questions to encourage sharing
-- Mental health resources when appropriate
-- No medical diagnoses or replacement for professional help
-
-Response: """
+Respond with empathy and care: """
         
         prompt = PromptTemplate(template=prompt_template, input_variables=['question'])
         chain = prompt | self.llm
@@ -54,24 +47,18 @@ Response: """
 
 if __name__ == "__main__":
     try:
-        # Read input from Node.js
         input_data = json.loads(sys.argv[1])
         message = input_data.get('message', '')
-        timestamp = input_data.get('timestamp', '')
         
         chatbot = Chatbot()
         result = chatbot.process_query(message)
-        
-        # Output result for Node.js to read
         print(json.dumps(result))
         
     except Exception as e:
-        # Return error response that Node.js can handle
-        error_response = {
-            "response": "I'm having some technical difficulties right now, but I'm here for you. Please try again in a moment.",
+        print(json.dumps({
+            "response": f"Error: {str(e)}",
             "alert": False
-        }
-        print(json.dumps(error_response))
+        }))
 # # This is your EXACT original inference.py file
 # from langchain_groq import ChatGroq
 # # from langchain.prompts import PromptTemplate
