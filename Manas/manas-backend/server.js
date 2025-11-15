@@ -5,40 +5,92 @@ const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 🎯 FIXED CORS - Allow all Vercel domains
+// CORS middleware - placed before routes
 app.use(cors({
   origin: [
     'https://arogyamind-mini-project-3laq.vercel.app',
-    'https://arogyamind-mini-project-3-git-.*-manteshbalaganurs-projects.vercel.app', // Preview URLs
-    'https://arogyamind-mini-project-.*.vercel.app', // All Vercel subdomains
-    'http://localhost:8080',
-    'http://localhost:3000', 
+    'https://arogyamind-mini-project-3laq-gtws5bu31.vercel.app',
+    'http://localhost:3000',
     'http://localhost:5173'
   ],
-  methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Handle preflight requests
-app.options('*', cors());
-
+// Body parsing middleware
 app.use(express.json());
 
 // Routes
 app.use('/api/chat', chatRoutes);
 
-// Root endpoint
+// Health check
 app.get('/', (req, res) => {
   res.json({ 
-    message: "Arogya AI Chatbot API is running. Use /api/chat to interact.",
-    status: "active"
+    message: "Arogya AI Chatbot API is running!",
+    status: "active",
+    timestamp: new Date().toISOString()
   });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Error handler
+app.use((error, req, res, next) => {
+  console.error(error);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Health check: http://localhost:${PORT}/`);
 });
+
+// Manas/manas-backend/wroking
+// const express = require('express');
+// const cors = require('cors');
+// const chatRoutes = require('./routes/chatRoutes');
+
+// const app = express();
+// const PORT = process.env.PORT || 5000;
+
+// // 🎯 FIXED CORS - Allow all Vercel domains
+// app.use(cors({
+//   origin: [
+//     'https://arogyamind-mini-project-3laq.vercel.app',
+//     'https://arogyamind-mini-project-3-git-.*-manteshbalaganurs-projects.vercel.app', // Preview URLs
+//     'https://arogyamind-mini-project-.*.vercel.app', // All Vercel subdomains
+//     'http://localhost:8080',
+//     'http://localhost:3000', 
+//     'http://localhost:5173'
+//   ],
+//   methods: ['GET', 'POST', 'OPTIONS'],
+//   credentials: true,
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+// }));
+
+// // Handle preflight requests
+// app.options('*', cors());
+
+// app.use(express.json());
+
+// // Routes
+// app.use('/api/chat', chatRoutes);
+
+// // Root endpoint
+// app.get('/', (req, res) => {
+//   res.json({ 
+//     message: "Arogya AI Chatbot API is running. Use /api/chat to interact.",
+//     status: "active"
+//   });
+// });
+
+// app.listen(PORT, '0.0.0.0', () => {
+//   console.log(`🚀 Server running on port ${PORT}`);
+// });
 // const express = require('express');
 // const cors = require('cors');
 // const dotenv = require('dotenv');
