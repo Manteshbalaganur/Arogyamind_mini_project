@@ -5,48 +5,38 @@ const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS middleware - placed before routes
+// Updated CORS configuration
 app.use(cors({
   origin: [
+    'http://localhost:8080', // Your local frontend
     'https://arogyamind-mini-project-3laq.vercel.app',
     'https://arogyamind-mini-project-3laq-gtws5bu31.vercel.app',
     'http://localhost:3000',
     'http://localhost:5173'
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// Body parsing middleware
+// Handle preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 
 // Routes
 app.use('/api/chat', chatRoutes);
 
-// Health check
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
-    message: "Arogya AI Chatbot API is running!",
-    status: "active",
-    timestamp: new Date().toISOString()
+    message: "Arogya AI Chatbot API is running. Use /api/chat to interact.",
+    status: "active"
   });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Error handler
-app.use((error, req, res, next) => {
-  console.error(error);
-  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/`);
 });
 
 // Manas/manas-backend/wroking
