@@ -447,57 +447,95 @@
 
 // module.exports = { chatHandler };
 
-const { spawn } = require('child_process');
-const { logger } = require('../utils/logger');
 
+// final version without fallback mechanism
+// const { spawn } = require('child_process');
+// const { logger } = require('../utils/logger');
+
+// const chatHandler = async (req, res) => {
+//   try {
+//     const { message, timestamp } = req.body;
+
+//     if (!message) {
+//       return res.status(400).json({ error: "No message provided" });
+//     }
+
+//     // Call Python AI model
+//     const pythonProcess = spawn('python', [
+//       './python_scripts/inference.py',
+//       JSON.stringify({ message, timestamp })
+//     ]);
+
+//     let result = '';
+//     let error = '';
+
+//     pythonProcess.stdout.on('data', (data) => {
+//       result += data.toString();
+//     });
+
+//     pythonProcess.stderr.on('data', (data) => {
+//       error += data.toString();
+//     });
+
+//     pythonProcess.on('close', (code) => {
+//       if (code !== 0) {
+//         // If Python fails, return error but don't use fallback
+//         return res.status(500).json({ 
+//           error: "AI model not available",
+//           details: "Python dependencies missing on server"
+//         });
+//       }
+
+//       try {
+//         const parsedResult = JSON.parse(result);
+//         res.json({
+//           response: parsedResult.response,
+//           alert: parsedResult.alert,
+//           timestamp: timestamp
+//         });
+//       } catch (parseError) {
+//         res.status(500).json({ error: "Failed to parse AI response" });
+//       }
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+// module.exports = { chatHandler };
+
+// controllers/chatController.js - TEMPORARY TEST VERSION
 const chatHandler = async (req, res) => {
   try {
-    const { message, timestamp } = req.body;
+    console.log('📨 Received chat request:', req.body);
+    
+    const { message } = req.body;
 
     if (!message) {
-      return res.status(400).json({ error: "No message provided" });
+      return res.status(400).json({ 
+        success: false,
+        error: "No message provided" 
+      });
     }
 
-    // Call Python AI model
-    const pythonProcess = spawn('python', [
-      './python_scripts/inference.py',
-      JSON.stringify({ message, timestamp })
-    ]);
+    // Simple test response - no Python dependency
+    const testResponse = {
+      success: true,
+      response: `I received your message: "${message}". This is a test response from the server.`,
+      alert: false,
+      timestamp: new Date().toISOString()
+    };
 
-    let result = '';
-    let error = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      result += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      error += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        // If Python fails, return error but don't use fallback
-        return res.status(500).json({ 
-          error: "AI model not available",
-          details: "Python dependencies missing on server"
-        });
-      }
-
-      try {
-        const parsedResult = JSON.parse(result);
-        res.json({
-          response: parsedResult.response,
-          alert: parsedResult.alert,
-          timestamp: timestamp
-        });
-      } catch (parseError) {
-        res.status(500).json({ error: "Failed to parse AI response" });
-      }
-    });
-
+    console.log('✅ Sending test response');
+    res.json(testResponse);
+    
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('❌ Chat handler error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 };
 
